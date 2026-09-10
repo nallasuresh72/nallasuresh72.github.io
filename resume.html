@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suresh Nalla | Resume</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="resume-page">
+<div class="resume-toolbar no-print">
+  <a href="index.html">← Back to Portfolio</a>
+  <button id="download-pdf">Download Latest Resume (PDF)</button>
+</div>
+<div id="pdf-status" class="no-print"></div>
+<main class="resume" id="resume"></main>
+<script src="data/site-data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+const d = window.siteData;
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const contact = [
+  d.profile.email ? 'E-Mail: ' + esc(d.profile.email) : '',
+  d.profile.linkedin ? '<a href="' + esc(d.profile.linkedin) + '">' + esc(d.profile.linkedin) + '</a>' : '',
+  'Address: ' + esc(d.profile.location.replace(', India',''))
+].filter(Boolean).join('<br>');
+
+const certifications = d.certifications.map(x => '<li>' + esc(x) + '</li>').join('');
+
+const experience = d.experience.map(x => `
+<section class="resume-section">
+  <h2 class="section-title">Professional Experience</h2>
+  <div class="job">
+    <h3>${esc(x.role.toUpperCase())}</h3>
+    <p class="job-meta"><b>${esc(x.company)}</b> | ${esc(x.location)} | ${esc(x.dateLabel)}</p>
+    ${x.project ? '<p><b>Project:</b> ' + esc(x.project) + '</p>' : ''}
+    <p class="subhead">Roles and Responsibilities:</p>
+    <ul>${x.responsibilities.map(r => '<li>' + esc(r) + '</li>').join('')}</ul>
+  </div>
+</section>`).join('');
+
+const skills = d.skills.map(x => `
+  <div class="skill-group"><b>${esc(x.title)}:</b><br>${x.items.map(esc).join(' | ')}</div>
+`).join('');
+
+const achievements = d.achievements.map(x => '<li>' + esc(x) + '</li>').join('');
+const education = `
+<h3>${esc(d.education.institution)} | ${esc(d.education.location)}</h3>
+<p><b>${esc(d.education.degree)} | ${esc(d.education.date)}</b></p>
+<ul>${d.education.details.map(x => '<li>' + esc(x) + '</li>').join('')}</ul>`;
+
+document.getElementById('resume').innerHTML = `
+<header class="resume-header">
+  <div><h1>${esc(d.profile.name)}</h1></div>
+  <div class="resume-contact">${contact}</div>
+</header>
+
+<section class="resume-section">
+  <h2 class="section-title">Professional Summary:</h2>
+  <p>${esc(d.profile.summary)}</p>
+  <p>SAP BASIS Administrator with 3+ years of experience across SAP upgrade implementation and AMS support. Experience includes ECC, S/4HANA, BW/4HANA, SRM, SCM/APO, SAP PI/PO, GRC, SBOP BI, NetWeaver Gateway, Solution Manager 7.2, SLD, SAP Java Portal, SAP IDM, SAP HANA, SAP BTP and cloud-based SAP environments.</p>
+  <p>Experienced in SAP upgrades using SUM, performance monitoring and tuning, HANA administration, transport management, security administration, SSL/TLS management, database upgrades, HA/DR activities, system refresh, client copy, integration landscapes and production support.</p>
+</section>
+
+<section class="resume-section">
+  <h2 class="section-title">Certifications:</h2>
+  <ul>${certifications}</ul>
+</section>
+
+${experience}
+
+<section class="resume-section">
+  <h2 class="section-title">Skills:</h2>
+  ${skills}
+</section>
+
+<section class="resume-section">
+  <h2 class="section-title">Achievements:</h2>
+  <ul>${achievements}</ul>
+</section>
+
+<section class="resume-section">
+  <h2 class="section-title">Education:</h2>
+  ${education}
+</section>`;
+</script>
+<script>
+document.getElementById('download-pdf').addEventListener('click', async function () {
+  const button = this;
+  const status = document.getElementById('pdf-status');
+  button.disabled = true;
+  button.textContent = 'Creating latest resume…';
+  status.textContent = 'Generating the PDF from the latest website data…';
+
+  try {
+    const element = document.getElementById('resume');
+    const filename = (d.profile.name.replace(/\s+/g, '_') + '_Resume.pdf');
+
+    await html2pdf().set({
+      margin: [8, 8, 8, 8],
+      filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    }).from(element).save();
+
+    status.textContent = 'Latest resume downloaded successfully.';
+  } catch (error) {
+    console.error(error);
+    status.textContent = 'PDF generation failed. You can use your browser print dialog as a fallback.';
+    window.print();
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Download Latest Resume (PDF)';
+  }
+});
+</script>
+</body>
+</html>
